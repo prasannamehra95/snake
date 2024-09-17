@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Snake Game</title>
+    <style>
+        body { text-align: center; font-family: Arial; background: #f0f0f0; }
+        canvas { background: black; border: 2px solid #006400; margin: 20px auto; }
+        #score, #gameOver, #restartButton { margin: 20px; font-size: 24px; }
+        #gameOver { color: red; display: none; }
+        #restartButton { display: none; padding: 10px 20px; font-size: 18px; }
+    </style>
+</head>
+<body>
+    <h1>Snake Game</h1>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <p id="score">Score: 0</p>
+    <p id="gameOver">Game Over!</p>
+    <button id="restartButton" onclick="restartGame()">Restart Game</button>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const box = 20;
+        let snake = [{ x: 9 * box, y: 9 * box }];
+        let food = { x: Math.floor(Math.random() * 20) * box, y: Math.floor(Math.random() * 20) * box };
+        let direction = 'RIGHT'; // Initial direction
+        let score = 0;
+        let speed = 150;
+        let gameInterval;
+
+        document.addEventListener('keydown', event => {
+            if (event.key === 'ArrowLeft' && direction !== 'RIGHT') direction = 'LEFT';
+            if (event.key === 'ArrowUp' && direction !== 'DOWN') direction = 'UP';
+            if (event.key === 'ArrowRight' && direction !== 'LEFT') direction = 'RIGHT';
+            if (event.key === 'ArrowDown' && direction !== 'UP') direction = 'DOWN';
+        });
+
+        function drawGame() {
+            let head = { ...snake[0] };
+
+            if (direction === 'LEFT') head.x -= box;
+            if (direction === 'UP') head.y -= box;
+            if (direction === 'RIGHT') head.x += box;
+            if (direction === 'DOWN') head.y += box;
+
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height || snake.some(part => part.x === head.x && part.y === head.y)) {
+                endGame();
+                return;
+            }
+
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                document.getElementById('score').textContent = `Score: ${score}`;
+                food = { x: Math.floor(Math.random() * 20) * box, y: Math.floor(Math.random() * 20) * box };
+                speed = Math.max(50, speed - 10); // Increase speed
+                clearInterval(gameInterval);
+                gameInterval = setInterval(drawGame, speed);
+            } else {
+                snake.pop(); // Remove the last part of the snake
+            }
+
+            snake.unshift(head); // Add new head to the snake
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#FF4500'; // Food color
+            ctx.fillRect(food.x, food.y, box, box);
+            snake.forEach((segment, index) => {
+                ctx.fillStyle = index === 0 ? '#32CD32' : '#228B22'; // Head and body colors
+                ctx.fillRect(segment.x, segment.y, box, box);
+            });
+        }
+
+        function endGame() {
+            clearInterval(gameInterval);
+            document.getElementById('gameOver').style.display = 'block';
+            document.getElementById('restartButton').style.display = 'block';
+        }
+
+        function restartGame() {
+            snake = [{ x: 9 * box, y: 9 * box }];
+            food = { x: Math.floor(Math.random() * 20) * box, y: Math.floor(Math.random() * 20) * box };
+            direction = 'RIGHT'; // Reset to initial direction
+            score = 0;
+            speed = 150;
+            document.getElementById('score').textContent = `Score: 0`;
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('restartButton').style.display = 'none';
+            clearInterval(gameInterval);
+            gameInterval = setInterval(drawGame, speed);
+        }
+
+        gameInterval = setInterval(drawGame, speed); // Start the game
+    </script>
+</body>
+</html>
